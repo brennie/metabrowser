@@ -1,0 +1,19 @@
+browsers:
+  chrome: ['google-chrome', '--profile-directory=%p']
+  firefox: ['firefox', '-p', '%p']
+
+default:
+  browser: firefox
+  profile: default
+
+profiles:
+  - browser: chrome
+    profile: default
+    urls:
+      - '*.accounts.google.com'
+
+  - browser: firefox
+    profile: work
+    urls: 
+      - '*.reviewboard.org'
+      - 'github.com/reviewboard'
