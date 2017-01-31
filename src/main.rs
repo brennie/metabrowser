@@ -8,7 +8,8 @@ mod config;
 
 use self::config::{Config, Error, ErrorKind};
 use std::path::Path;
-use std::io::{stderr, Write};
+use std::io::stderr;
+use std::io::prelude::*;
 use std::env::home_dir;
 
 
