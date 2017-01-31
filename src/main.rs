@@ -1,5 +1,6 @@
 #[macro_use]
 extern crate error_chain;
+extern crate regex;
 #[macro_use]
 extern crate serde_derive;
 extern crate serde_yaml;
@@ -22,10 +23,7 @@ fn main() {
     match result {
         Ok(c) => println!("{:?}", c),
         Err(e) => {
-            writeln!(&mut stderr(),
-                     "Could not open metabrowser configuration file: {}",
-                     e)
-                .unwrap();
+            writeln!(&mut stderr(), "Could not parse .metabrowser.yaml: {}", e).unwrap();
         }
     }
 }
