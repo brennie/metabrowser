@@ -19,7 +19,7 @@ error_chain! {
             description("could not locate home directory")
         }
 
-        BadProfileError(browser: String, profile: String) {
+        BadEntryError(browser: String, profile: String) {
             description("bad configuration")
             display("bad configuration: no such browser '{}' defined for profile '{}'",
                     browser,
@@ -99,8 +99,7 @@ fn urls_to_regex(urls: &Vec<String>) -> Option<Regex> {
 }
 
 
-
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Debug, Deserialize)]
 /// A default browser and profile combination.
 pub struct DefaultProfile {
     /// The default browser.
@@ -110,12 +109,13 @@ pub struct DefaultProfile {
     pub profile: String,
 }
 
-#[derive(Debug)]
-/// A browser profile.
+
+#[derive(Debug, Deserialize)]
+/// A configuration entry.
 ///
-/// A browser profile describes a browser and profile pair and the corresponding regex. All URLs
-/// that match the regular expression will launch in the given browser.
-pub struct BrowserProfile {
+/// Each entry maps a regular expression to a browser and profile. If a URL matches the given
+/// regular expression it will be launched using the corresponding browser and profile.
+pub struct Entry {
     /// The browser to use.
     ///
     /// This must be defined in the list of browsers in the parent [`Config`](struct.Config.html)
@@ -125,14 +125,23 @@ pub struct BrowserProfile {
     /// The profile to use.
     pub profile: String,
 
+    /// The list of URLs that this profile matches.
+    ///
+    /// This list is used to generate the regular expression.
+    pub urls: Vec<String>,
+
     /// The regular expression to match against.
     ///
     /// If a URL matches this regular expression, the corresponding browser will be launched with
     /// the corresponding profile.
-    pub regex: Regex,
+    ///
+    /// If the list of URLs is empty, this will be `None`.
+    #[serde(skip_deserializing)]
+    pub regex: Option<Regex>,
 }
 
-#[derive(Debug)]
+
+#[derive(Debug, Deserialize)]
 /// Metabrowser configuration.
 ///
 /// The configuration specifies the set of browsers and how they can be launched, as well as the
@@ -146,91 +155,42 @@ pub struct Config {
     pub default: DefaultProfile,
 
     /// The specified browser-profile pairs and their corresponding regular expressions.
-    pub profiles: Vec<BrowserProfile>,
+    #[serde(rename="profiles")]
+    pub entries: Vec<Entry>,
 }
-
-
-#[derive(Debug, Deserialize)]
-#[doc(hidden)]
-/// A parsed browser profile.
-struct ParsedBrowserProfile {
-    browser: String,
-    profile: String,
-    urls: Vec<String>,
-}
-
-
-#[derive(Debug, Deserialize)]
-#[doc(hidden)]
-/// The parsed configuration.
-///
-/// The configuration must be processed into a Config object before it is usable.
-struct ParsedConfig {
-    browsers: HashMap<String, Vec<String>>,
-    default: DefaultProfile,
-    profiles: Vec<ParsedBrowserProfile>,
-}
-
-impl ParsedConfig {
-    #[doc(hidden)]
-    /// Read the configuration from a file.
-    ///
-    /// The configuration must be further procsed
-    fn from_file(p: &Path) -> Result<Self> {
-        let mut buf = String::new();
-        let mut f = try!(File::open(p));
-        try!(f.read_to_string(&mut buf));
-        try!(serde_yaml::from_str::<Self>(&buf))
-    }
-
-    #[doc(hidden)]
-    /// Validate a parsed configuration.
-    fn validate(self) -> Result<Self> {
-
-        for profile in &self.profiles {
-            if !self.browsers.contains_key(&profile.browser) {
-                return Err(Error::from(ErrorKind::BadProfileError(profile.browser,
-                                                                  profile.profile)));
-            }
-        }
-        Ok(self)
-    }
-}
-
-
-impl Into<Config> for ParsedConfig {
-    #[doc(hidden)]
-    /// Transform a ParsedConfig into a usable Config.
-    ///
-    /// Transformation of a ParsedConfig into a Config involves transforming the list of URLs into a
-    /// regular expression that matches all of those URLs. This process cannot fail.
-    fn into(self) -> Config {
-        let profiles = self.profiles
-            .into_iter()
-            .filter_map(|p| urls_to_regex(&p.urls).map(|re| (re, p)))
-            .map(|(re, p)| {
-                BrowserProfile {
-                    browser: p.browser,
-                    profile: p.profile,
-                    regex: re,
-                }
-            })
-            .collect::<Vec<_>>();
-
-        Config {
-            browsers: self.browsers,
-            default: self.default,
-            profiles: profiles,
-        }
-    }
-}
-
 
 impl Config {
     /// Read the configuration from the file.
     pub fn from_file(p: &Path) -> Result<Config> {
-        ParsedConfig::from_file(p)
-            .and_then(ParsedConfig::validate)
-            .map(::std::convert::Into::into)
+
+        let mut buf = String::new();
+        let mut f = try!(File::open(p));
+        try!(f.read_to_string(&mut buf));
+        
+        let mut config = try!(serde_yaml::from_str::<Self>(&buf)
+            .map_err(Error::from)
+            .and_then(Config::validate));
+        
+        for entry in &mut config.entries {
+            entry.regex = urls_to_regex(&entry.urls);
+        }
+        
+        Ok(config)
+    }
+
+    #[doc(hidden)]
+    /// Validate a parsed configuration.
+    ///
+    /// This function will ensure that all entries match up with the list of available browsers.
+    fn validate(mut self) -> Result<Self> {
+        for i in 0..self.entries.len() {
+            if !self.browsers.contains_key(&self.entries[i].browser) {
+                let browser_profile = self.entries.swap_remove(i);
+                return Err(Error::from(ErrorKind::BadEntryError(browser_profile.browser,
+                                                                browser_profile.profile)));
+            }
+        }
+
+        Ok(self)
     }
 }
