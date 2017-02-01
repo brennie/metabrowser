@@ -78,7 +78,6 @@ fn urls_to_regex(urls: &Vec<String>) -> Option<Regex> {
     if urls.is_empty() {
         None
     } else {
-
         let re_body = urls.iter()
             .map(|url| escape_url(url))
             .collect::<Vec<_>>()
@@ -106,6 +105,7 @@ fn urls_to_regex(urls: &Vec<String>) -> Option<Regex> {
 pub struct DefaultProfile {
     /// The default browser.
     pub browser: String,
+
     /// The default profile to use for the browser.
     pub profile: String,
 }
@@ -121,12 +121,14 @@ pub struct BrowserProfile {
     /// This must be defined in the list of browsers in the parent [`Config`](struct.Config.html)
     /// struct.
     pub browser: String,
+
     /// The profile to use.
     pub profile: String,
+
     /// The regular expression to match against.
     ///
-    /// If a URL matches this regular expression, the corresponding browser will be launched with the
-    /// corresponding profile.
+    /// If a URL matches this regular expression, the corresponding browser will be launched with
+    /// the corresponding profile.
     pub regex: Regex,
 }
 
@@ -138,9 +140,11 @@ pub struct Config {
     /// A mapping of browser names to their command line parameters for launching with a specified
     /// profile.
     pub browsers: HashMap<String, Vec<String>>,
+
     /// The default browser and profile to use for URLs that do not match any regular expressions in
     /// the list of profiles.
     pub default: DefaultProfile,
+
     /// The specified browser-profile pairs and their corresponding regular expressions.
     pub profiles: Vec<BrowserProfile>,
 }
@@ -198,8 +202,8 @@ impl Into<Config> for ParsedConfig {
     #[doc(hidden)]
     /// Transform a ParsedConfig into a usable Config.
     ///
-    /// Transformation of a ParsedConfig into a Config involves transforming the list of URLs into
-    /// a regular expression that matches all of those URLs. This process cannot fail.
+    /// Transformation of a ParsedConfig into a Config involves transforming the list of URLs into a
+    /// regular expression that matches all of those URLs. This process cannot fail.
     fn into(self) -> Config {
         let profiles = self.profiles
             .into_iter()
