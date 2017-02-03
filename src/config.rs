@@ -67,6 +67,7 @@ fn escape_url(url: &str) -> String {
     }
 }
 
+
 #[doc(hidden)]
 /// Transform a list of URLs to a regular expression that matches them.
 ///
@@ -158,6 +159,7 @@ pub struct Config {
     #[serde(rename="profiles")]
     pub entries: Vec<Entry>,
 }
+
 
 impl Config {
     /// Read the configuration from the file.
