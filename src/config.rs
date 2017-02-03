@@ -166,15 +166,15 @@ impl Config {
         let mut buf = String::new();
         let mut f = try!(File::open(p));
         try!(f.read_to_string(&mut buf));
-        
+
         let mut config = try!(serde_yaml::from_str::<Self>(&buf)
             .map_err(Error::from)
             .and_then(Config::validate));
-        
+
         for entry in &mut config.entries {
             entry.regex = urls_to_regex(&entry.urls);
         }
-        
+
         Ok(config)
     }
 
