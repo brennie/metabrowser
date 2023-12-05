@@ -1,0 +1,9 @@
+[package]
+name = "metabrowser"
+authors = ["Barret Rennie <barret@brennie.ca>"]
+description = "Open URLs in specific browsers, based on a set of rules."
+license = "MIT OR Apache-2.0"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
