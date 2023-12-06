@@ -3,7 +3,7 @@ use regex::{Regex, RegexBuilder};
 const RE_PREFIX: &str = r"^(?:https?://)?(?:";
 const RE_SUFFIX: &str = r")";
 
-pub fn to_regex(url_patterns: &[String]) -> Option<Regex> {
+pub fn url_pattern_to_regex(url_patterns: &[String]) -> Option<Regex> {
     if url_patterns.is_empty() {
         None
     } else {

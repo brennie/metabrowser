@@ -4,7 +4,7 @@ use anyhow::Result;
 use clap::Args;
 
 use crate::config::{BrowserProfile, Config};
-use crate::url;
+use crate::url::url_pattern_to_regex;
 
 #[derive(Args)]
 pub struct OpenOptions {
@@ -21,7 +21,7 @@ pub fn open_url(config: &Config, options: &OpenOptions) -> Result<()> {
     let mut open_in = &config.default;
 
     for rule in &config.rules {
-        let re = match url::to_regex(&rule.url_patterns) {
+        let re = match url_pattern_to_regex(&rule.url_patterns) {
             Some(re) => re,
             None => continue,
         };
