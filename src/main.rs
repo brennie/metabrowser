@@ -5,8 +5,9 @@ mod url;
 use anyhow::Result;
 use clap::{Parser, Subcommand};
 
+#[cfg(windows)]
+use crate::command::{install, uninstall, InstallOptions};
 use crate::command::{open_url, OpenOptions};
-use crate::config::Config;
 
 #[derive(Parser)]
 #[command(about)]
@@ -23,6 +24,14 @@ pub struct Options {
 pub enum SubCommand {
     /// Open a URL.
     Open(OpenOptions),
+
+    /// Install metabrowser as a web browser.
+    #[cfg(windows)]
+    Install(InstallOptions),
+
+    /// Uninstall metabrowser as a web browser.
+    #[cfg(windows)]
+    Uninstall,
 }
 
 fn main() -> Result<()> {
@@ -34,6 +43,12 @@ fn main() -> Result<()> {
 
     match subcommand {
         SubCommand::Open(open_options) => open_url(&open_options)?,
+
+        #[cfg(windows)]
+        SubCommand::Install(install_options) => install(&install_options)?,
+
+        #[cfg(windows)]
+        SubCommand::Uninstall => uninstall()?,
     };
 
     Ok(())
