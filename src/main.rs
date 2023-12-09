@@ -2,11 +2,8 @@ mod command;
 mod config;
 mod url;
 
-use std::fs::File;
-
-use anyhow::{anyhow, Context, Result};
+use anyhow::Result;
 use clap::{Parser, Subcommand};
-use directories::ProjectDirs;
 
 use crate::command::{open_url, OpenOptions};
 use crate::config::Config;
@@ -30,26 +27,7 @@ pub enum SubCommand {
 
 fn main() -> Result<()> {
     let options = Options::parse();
-
-    let config_path = ProjectDirs::from("ca", "brennie", "metabrowser")
-        .ok_or_else(|| anyhow!("Could not get project dirs"))?
-        .config_dir()
-        .join("metabrowser.yml");
-
-    let f = File::open(&config_path).with_context(|| {
-        format!(
-            "Could not open metabrowser config at: {}",
-            config_path.display()
-        )
-    })?;
-    let config = serde_yaml::from_reader::<_, Config>(f).with_context(|| {
-        format!(
-            "Could not parse metabrowser config at: {}",
-            config_path.display()
-        )
-    })?;
-
-    config.validate()?;
+    let config = Config::load()?;
 
     let subcommand = options
         .subcommand

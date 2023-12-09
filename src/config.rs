@@ -1,6 +1,8 @@
 use std::collections::HashMap;
+use std::fs::File;
 
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, Context, Result};
+use directories::ProjectDirs;
 use serde::Deserialize;
 
 /// A browser and the profile it should open with.
@@ -43,7 +45,32 @@ pub struct Config {
 }
 
 impl Config {
-    pub fn validate(&self) -> Result<()> {
+    pub fn load() -> Result<Self> {
+        let config_path = ProjectDirs::from("ca", "brennie", "metabrowser")
+            .ok_or_else(|| anyhow!("Could not get project dirs"))?
+            .config_dir()
+            .join("metabrowser.yml");
+
+        let f = File::open(&config_path).with_context(|| {
+            format!(
+                "Could not open metabrowser config at: {}",
+                config_path.display()
+            )
+        })?;
+
+        let config = serde_yaml::from_reader::<_, Self>(f).with_context(|| {
+            format!(
+                "Could not parse metabrowser config at: {}",
+                config_path.display()
+            )
+        })?;
+
+        config.validate()?;
+
+        Ok(config)
+    }
+
+    fn validate(&self) -> Result<()> {
         if self.browsers.get(&self.default.browser).is_none() {
             return Err(anyhow!(
                 "Browser definition for '{}' is missing",
