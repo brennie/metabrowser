@@ -29,9 +29,10 @@ pub fn url_pattern_to_regex(url_patterns: &[String]) -> Option<Regex> {
 
 const WILDCARD: &str = "*.";
 const WILDCARD_RE: &str = r"(?:.+\.)?";
+const URL_PATTERN_SUFFIX: &str = r"(?:/|$)";
 
 fn escape_url_pattern(url_pattern: &str) -> String {
-    if url_pattern.starts_with(WILDCARD) {
+    let mut pattern = if url_pattern.starts_with(WILDCARD) {
         let rest = url_pattern.split_at(WILDCARD.len()).1;
 
         let mut escaped = String::new();
@@ -40,5 +41,9 @@ fn escape_url_pattern(url_pattern: &str) -> String {
         escaped
     } else {
         regex::escape(url_pattern)
-    }
+    };
+
+    pattern.push_str(URL_PATTERN_SUFFIX);
+
+    pattern
 }
