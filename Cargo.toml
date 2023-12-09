@@ -8,11 +8,16 @@ edition = "2021"
 
 [dependencies]
 anyhow = "1.0.75"
+cfg-if = "1.0.0"
 clap = { version = "4.4.11", features = ["derive"] }
 directories = "5.0.1"
 regex = "1.10.2"
 serde = { version = "1.0.193", features = ["derive"] }
 serde_yaml = "0.9.27"
+
+[dependencies.windows]
+version = "0.52.0"
+features = ["Win32_Foundation", "Win32_System_Console"]
 
 [target.'cfg(windows)'.dependencies]
 winreg = "0.52.0"

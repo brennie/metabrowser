@@ -1,8 +1,11 @@
+#![windows_subsystem = "windows"]
+
 mod command;
 mod config;
 mod url;
 
 use anyhow::Result;
+use cfg_if::cfg_if;
 use clap::{Parser, Subcommand};
 
 #[cfg(windows)]
@@ -35,6 +38,13 @@ pub enum SubCommand {
 }
 
 fn main() -> Result<()> {
+    cfg_if! {
+        if #[cfg(windows)] {
+            use windows::Win32::System::Console::{AttachConsole, ATTACH_PARENT_PROCESS};
+            let _ = unsafe { AttachConsole(ATTACH_PARENT_PROCESS) };
+        }
+    }
+
     let options = Options::parse();
 
     let subcommand = options
