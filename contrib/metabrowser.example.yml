@@ -1,0 +1,18 @@
+browsers:
+  chrome: ['google-chrome', '--profile-directory={profile}', '{url}']
+  firefox: ['firefox', '-p', '{profile}', '{url}']
+
+default:
+  # By default, all URLs will open in Firefox with the default release profile.
+  browser: firefox
+  profile: default-release
+
+rules:
+  - open_in:
+      browser: 'chrome'
+      profile: 'work'
+    url_patterns:
+      # Matches work.co URLs and any subdomains of work.co.
+      - '*.work.co'
+      # Patterns can also include partial paths
+      - 'github.com/workco'
