@@ -17,7 +17,8 @@ pub struct OpenOptions {
     url: String,
 }
 
-pub fn open_url(config: &Config, options: &OpenOptions) -> Result<()> {
+pub fn open_url(options: &OpenOptions) -> Result<()> {
+    let config = Config::load()?;
     let mut open_in = &config.default;
 
     for rule in &config.rules {

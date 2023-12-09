@@ -27,14 +27,13 @@ pub enum SubCommand {
 
 fn main() -> Result<()> {
     let options = Options::parse();
-    let config = Config::load()?;
 
     let subcommand = options
         .subcommand
         .unwrap_or_else(|| SubCommand::Open(options.open_options.unwrap()));
 
     match subcommand {
-        SubCommand::Open(open_options) => open_url(&config, &open_options)?,
+        SubCommand::Open(open_options) => open_url(&open_options)?,
     };
 
     Ok(())
