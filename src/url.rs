@@ -47,3 +47,86 @@ fn escape_url_pattern(url_pattern: &str) -> String {
 
     pattern
 }
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_escape_url_pattern() {
+        const TEST_CASES: &[(&str, &str)] = &[
+            ("example.com", r"example\.com(?:/|$)"),
+            ("*.example.com", r"(?:.+\.)?example\.com(?:/|$)"),
+        ];
+
+        for (url_pattern, expected) in TEST_CASES {
+            let result = escape_url_pattern(url_pattern);
+            assert_eq!(result, *expected);
+        }
+    }
+
+    #[test]
+    fn test_url_pattern_to_regex() {
+        let test_cases: &[(&[_], &[_], &[_])] = &[
+            (
+                &["example.com".to_owned()],
+                &[
+                    "example.com/",
+                    "example.com/path",
+                    "http://example.com",
+                    "http://example.com/",
+                    "https://example.com",
+                    "https://example.com/",
+                    "EXAMPLE.COM",
+                    "HTTP://EXAMPLE.COM",
+                    "HTTP://EXAMPLE.COM/",
+                    "HTTPS://EXAMPLE.COM",
+                    "HTTPS://EXAMPLE.COM/",
+                ],
+                &[
+                    "www.example.com",
+                    "example.com.evil.net",
+                    "example.net",
+                    "ftp://example.com",
+                    "badexample.com",
+                ],
+            ),
+            (
+                &["*.example.com".to_owned()],
+                &[
+                    "example.com",
+                    "example.com/path",
+                    "www.example.com",
+                    "www2.example.com/path",
+                    "http://example.com",
+                    "http://example.com/",
+                    "https://example.com",
+                    "https://example.com/",
+                ],
+                &["example.com.evil.net", "example.net", "badexample.com"],
+            ),
+            (
+                &["example.com/path".to_owned()],
+                &["example.com/path", "example.com/path/subpath"],
+                &["example.com/path-to-evil-subdir"],
+            ),
+            (
+                &["example.com".to_owned(), "example2.com".to_owned()],
+                &["example.com", "example2.com"],
+                &["example.com.example2.com", "example2.com.example.com"],
+            ),
+        ];
+
+        for (url_patterns, expected_matches, expected_mismatches) in test_cases {
+            let re = url_patterns_to_regex(*url_patterns).unwrap();
+
+            for url in *expected_matches {
+                assert!(re.is_match(url), "{url_patterns:?} matches {url}");
+            }
+
+            for url in *expected_mismatches {
+                assert!(!re.is_match(url), "{url_patterns:?} does not match {url}");
+            }
+        }
+    }
+}
