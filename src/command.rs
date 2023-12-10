@@ -6,7 +6,7 @@ use clap::Args;
 #[cfg(windows)]
 pub use crate::command::windows::{install, uninstall, InstallOptions};
 use crate::config::{BrowserProfile, Config};
-use crate::url::url_pattern_to_regex;
+use crate::url::url_patterns_to_regex;
 
 #[derive(Args)]
 pub struct OpenOptions {
@@ -24,7 +24,7 @@ pub fn open_url(options: &OpenOptions) -> Result<()> {
     let mut open_in = &config.default;
 
     for rule in &config.rules {
-        let re = match url_pattern_to_regex(&rule.url_patterns) {
+        let re = match url_patterns_to_regex(&rule.url_patterns) {
             Some(re) => re,
             None => continue,
         };
