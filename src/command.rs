@@ -1,7 +1,9 @@
+use std::path::PathBuf;
 use std::process::Command;
 
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use clap::Args;
+use url::Url;
 
 #[cfg(windows)]
 pub use crate::command::windows::{install, uninstall, InstallOptions};
@@ -15,7 +17,10 @@ pub struct OpenOptions {
     check: bool,
 
     #[arg()]
-    /// The URL to open.
+    /// The path or URL to open.
+    ///
+    /// If this corresponds to a local file path, it will be passed to the
+    /// browser as a `file://` URL.
     url: String,
 }
 
@@ -35,7 +40,18 @@ pub fn open_url(options: &OpenOptions) -> Result<()> {
         }
     }
 
-    let mut command = build_command(&config.browsers[&open_in.browser], open_in, &options.url)?;
+    let url = match Url::parse(&options.url) {
+        Ok(url) => url,
+        Err(_) => {
+            let path = PathBuf::from(&options.url).canonicalize()?;
+            Url::from_file_path(path)
+                .map_err(|_| {
+                    anyhow!("Could not parse `{}' into a file URL", options.url)
+                })?
+        }
+    };
+
+    let mut command = build_command(&config.browsers[&open_in.browser], open_in, url.as_ref())?;
 
     if options.check {
         println!(
